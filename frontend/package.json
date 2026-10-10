@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^8.3.4"
+    "vite": "^7.3.7"
   },
   "description": "React + Vite single-page app for selling data, SMS and minutes, with commission and referrals. Backend (Node.js on Render, PostgreSQL) comes next. Until then the app runs on a built-in mock API.",
   "main": "vite.config.js",
