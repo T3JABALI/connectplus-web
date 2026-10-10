@@ -1,0 +1,25 @@
+{
+  "name": "connectplus-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^8.3.4"
+  },
+  "description": "React + Vite single-page app for selling data, SMS and minutes, with commission and referrals. Backend (Node.js on Render, PostgreSQL) comes next. Until then the app runs on a built-in mock API.",
+  "main": "vite.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
