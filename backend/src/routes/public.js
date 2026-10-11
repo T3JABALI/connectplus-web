@@ -4,6 +4,9 @@ import { query } from '../db.js';
 
 const router = Router();
 
+router.get('/', (req, res) => {
+  res.json({ name: 'ConnectPlus API', status: 'ok' });
+});
 router.get('/health', async (req, res) => {
   await query('SELECT 1');
   res.json({ ok: true });
