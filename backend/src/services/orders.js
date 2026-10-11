@@ -2,8 +2,7 @@ import { config } from '../config.js';
 import { query, tx } from '../db.js';
 import { HttpError } from '../errors.js';
 import { randomString } from '../lib/crypto.js';
-import { mask, toLocal } from '../lib/phone.js';
-import { deliverBundle } from './delivery.js';
+import { toLocal, mask } from '../lib/phone.js';
 import { stkPush, stkQuery } from './mpesa.js';
 
 // Internal statuses are detailed. The frontend only needs five, and must never tell a customer
@@ -99,7 +98,7 @@ export async function createOrder({ offerId, recipientPhone, payerPhone, userId 
 
 // Called by the M-Pesa callback, by the reconciler, and by the mock. Safe to call more than once.
 export async function applyPaymentResult({ checkoutRequestId, resultCode, resultDesc, receipt, amountKes }) {
-  let nowPaid = false;
+  
 
   await tx(async (c) => {
     const { rows: [o] } = await c.query('SELECT * FROM orders WHERE checkout_request_id = $1 FOR UPDATE', [checkoutRequestId]);
@@ -126,11 +125,14 @@ export async function applyPaymentResult({ checkoutRequestId, resultCode, result
           return;
         }
       }
-      await c.query(
-        `UPDATE orders SET status = 'paid', paid_at = now(), mpesa_receipt = $2, failure_reason = NULL WHERE id = $1`,
-        [o.id, receipt || null]
-      );
-      nowPaid = true;
+              // Payment confirmed. Your phone's USSD automation takes it from here, so the order is complete.
+        const { rows: [done] } = await c.query(
+          `UPDATE orders SET status = 'delivered', paid_at = now(), delivered_at = now(),
+                  mpesa_receipt = $2, failure_reason = NULL
+            WHERE id = $1 RETURNING *`,
+          [o.id, receipt || null]
+        );
+        await creditCommission(c, done);
     } else if (o.status === 'pending_payment') {
       await c.query(`UPDATE orders SET status = 'payment_failed', failure_reason = $2 WHERE id = $1`,
         [o.id, String(resultDesc || 'payment_failed').slice(0, 200)]);
@@ -138,7 +140,7 @@ export async function applyPaymentResult({ checkoutRequestId, resultCode, result
     // A paid or delivered order is never moved backwards by a failure message.
   });
 
-  if (nowPaid) kickDeliveries();
+  
 }
 
 // Handles the JSON Safaricom posts to our callback URL.
@@ -164,63 +166,12 @@ export async function handleMpesaCallback(body) {
     amountKes: items.Amount
   });
 }
+  /* ------------------------------------------------------------- commission */
 
-/* --------------------------------------------------------------- delivery */
-
-let deliveringNow = false;
-
-export function kickDeliveries() {
-  setImmediate(() => processDeliveries().catch((e) => console.error('Delivery run failed:', e.message)));
-}
-
-export async function processDeliveries() {
-  if (deliveringNow) return;
-  deliveringNow = true;
-  try {
-    for (;;) {
-      // Claiming moves the order to "delivering" in one step, so no other process can pick it up too.
-      const { rows } = await query(
-        `UPDATE orders SET status = 'delivering', delivery_started_at = now()
-          WHERE id IN (SELECT id FROM orders WHERE status = 'paid' ORDER BY paid_at LIMIT 5 FOR UPDATE SKIP LOCKED)
-          RETURNING *`
-      );
-      if (!rows.length) break;
-      for (const o of rows) await deliverOne(o);
-    }
-  } finally {
-    deliveringNow = false;
-  }
-}
-
-async function deliverOne(o) {
-  let result;
-  try {
-    const { rows: [offer] } = await query('SELECT * FROM offers WHERE id = $1', [o.offer_id]);
-    result = await deliverBundle({ order: o, offer });
-  } catch (e) {
-    console.error('Delivery failed for', o.ref, '-', e.message);
-    await query(`UPDATE orders SET status = 'delivery_failed', failure_reason = $2 WHERE id = $1 AND status = 'delivering'`,
-      [o.id, String(e.message).slice(0, 300)]);
-    return;
-  }
-  try {
-    await completeDelivery(o.id, result.providerRef);
-  } catch (e) {
-    // The bundle WAS sent but we could not record it. Never retry automatically or it would be sent twice.
-    console.error('Delivered but not recorded for', o.ref, '-', e.message);
-    await query(`UPDATE orders SET status = 'needs_review', failure_reason = 'delivered_but_not_recorded' WHERE id = $1`, [o.id]).catch(() => {});
-  }
-}
-
-// Marks the order delivered and credits commission, all in one transaction.
-export async function completeDelivery(orderId, providerRef) {
-  return tx(async (c) => {
-    const { rows: [o] } = await c.query(
-      `UPDATE orders SET status = 'delivered', delivered_at = now(), provider_ref = $2, failure_reason = NULL
-        WHERE id = $1 AND status = 'delivering' RETURNING *`,
-      [orderId, providerRef]
-    );
-    if (!o || !o.user_id) return; // guest orders earn nothing
+  // Credits commission for a completed order. Always called inside the transaction that completes
+  // the order, so an order and its commission can never get out of step.
+  export async function creditCommission(c, o) {
+    if (!o.user_id) return; // guest orders earn nothing
 
     const hold = config.commissionHoldHours;
     const credit = (userId, kind, cents, description) => c.query(
@@ -238,8 +189,20 @@ export async function completeDelivery(orderId, providerRef) {
       const refCents = Math.round(o.price_cents * config.refRate);
       if (refCents > 0) await credit(buyer.referred_by, 'referral', refCents, `Referral purchase – ${mask(buyer.phone)}`);
     }
-  });
-}
+  }
+
+  // Admin: an order held for review (amount mismatch or duplicate receipt) that you have checked and accepted.
+  export async function approveReviewedOrder(id) {
+    return tx(async (c) => {
+      const { rows: [o] } = await c.query(
+        `UPDATE orders SET status = 'delivered', delivered_at = now(), failure_reason = NULL
+          WHERE id = $1 AND status = 'needs_review' RETURNING *`,
+        [id]
+      );
+      if (!o) throw new HttpError(409, 'That order is not waiting for review.');
+      await creditCommission(c, o);
+    });
+  }
 
 /* ---------------------------------------------------- background clean-up */
 
@@ -267,9 +230,3 @@ export async function reconcilePayments() {
                 WHERE status = 'pending_payment' AND created_at < now() - interval '15 minutes'`);
 }
 
-// An order stuck in "delivering" means the server stopped mid-delivery. We cannot know if the
-// bundle was sent, so it goes to a human instead of being retried.
-export async function recoverStaleDeliveries() {
-  await query(`UPDATE orders SET status = 'delivery_failed', failure_reason = 'stuck_delivering_check_provider'
-                WHERE status = 'delivering' AND delivery_started_at < now() - interval '10 minutes'`);
-}

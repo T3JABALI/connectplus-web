@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { query } from '../db.js';
-import { HttpError } from '../errors.js';
+import { approveReviewedOrder } from '../services/orders.js';
 import { toLocal } from '../lib/phone.js';
 import { parse, z } from '../lib/validate.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { approveWithdrawal, rejectWithdrawal } from '../services/ledger.js';
-import { completeDelivery, kickDeliveries } from '../services/orders.js';
+
 
 const router = Router();
 router.use(requireAdmin);
@@ -40,36 +40,20 @@ router.post('/withdrawals/:id/reject', async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ---- orders that need a human: paid but not delivered ---- */
+/* ---- orders that need a human: payments held because something looked wrong ---- */
 
 router.get('/orders/attention', async (req, res) => {
-  const { rows } = await query(
-    `SELECT * FROM orders WHERE status IN ('delivery_failed', 'needs_review') ORDER BY created_at LIMIT 200`
-  );
+  const { rows } = await query(`SELECT * FROM orders WHERE status = 'needs_review' ORDER BY created_at LIMIT 200`);
   res.json(rows.map((o) => ({
     id: o.id, ref: o.ref, status: o.status, reason: o.failure_reason, title: o.title,
     price: o.price_cents / 100, recipient: toLocal(o.recipient_phone), payer: toLocal(o.payer_phone),
-    mpesaReceipt: o.mpesa_receipt, paidAt: o.paid_at?.toISOString() ?? null
+    mpesaReceipt: o.mpesa_receipt, createdAt: o.created_at.toISOString()
   })));
 });
 
-// Try delivering again. Only do this after checking with your provider that the bundle was NOT sent.
-router.post('/orders/:id/retry', async (req, res) => {
-  const r = await query(`UPDATE orders SET status = 'paid' WHERE id = $1 AND status = 'delivery_failed'`, [idParam(req)]);
-  if (!r.rowCount) throw new HttpError(409, 'Only orders with a failed delivery can be retried.');
-  kickDeliveries();
-  res.json({ ok: true });
-});
-
-// Use after you delivered the bundle yourself. Records it and credits commission.
-router.post('/orders/:id/mark-delivered', async (req, res) => {
-  const id = idParam(req);
-  const r = await query(
-    `UPDATE orders SET status = 'delivering', delivery_started_at = now()
-      WHERE id = $1 AND status IN ('delivery_failed', 'needs_review')`, [id]
-  );
-  if (!r.rowCount) throw new HttpError(409, 'That order is not waiting for attention.');
-  await completeDelivery(id, 'manual');
+// Accept an order you have checked by hand. It is marked complete and commission is credited.
+router.post('/orders/:id/accept', async (req, res) => {
+  await approveReviewedOrder(idParam(req));
   res.json({ ok: true });
 });
 

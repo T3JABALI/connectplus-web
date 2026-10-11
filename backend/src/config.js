@@ -40,8 +40,7 @@ export const config = {
     callbackSecret: env.MPESA_CALLBACK_SECRET,
     verifyCallbacks: env.MPESA_VERIFY_CALLBACKS !== 'false'
   },
-  delivery: { provider: env.DELIVERY_PROVIDER || 'mock', apiUrl: env.DELIVERY_API_URL, apiKey: env.DELIVERY_API_KEY },
-
+  
   autoMigrate: env.AUTO_MIGRATE !== 'false',
   runWorker: env.RUN_WORKER !== 'false'
 };
@@ -62,15 +61,12 @@ function validateConfig() {
   if (!['console', 'africastalking'].includes(config.sms.provider)) errs.push('SMS_PROVIDER must be console or africastalking.');
   if (config.sms.provider === 'africastalking' && (!config.sms.atUsername || !config.sms.atApiKey)) errs.push('AT_USERNAME and AT_API_KEY are required for africastalking.');
 
-  if (!['mock', 'http'].includes(config.delivery.provider)) errs.push('DELIVERY_PROVIDER must be mock or http.');
-  if (config.delivery.provider === 'http' && (!config.delivery.apiUrl || !config.delivery.apiKey)) errs.push('DELIVERY_API_URL and DELIVERY_API_KEY are required for the http provider.');
 
   if (isProd) {
     if (!config.adminKey || config.adminKey.length < 24) errs.push('ADMIN_API_KEY must be at least 24 characters in production.');
     if (!config.corsOrigins.length) errs.push('CORS_ORIGINS is required in production.');
     if (m.mode === 'mock') errs.push('MPESA_MODE=mock is not allowed in production.');
     if (config.sms.provider === 'console') errs.push('SMS_PROVIDER=console is not allowed in production (it prints login codes).');
-    if (config.delivery.provider === 'mock') errs.push('DELIVERY_PROVIDER=mock is not allowed in production.');
     if (config.otp.devFixedCode) errs.push('DEV_FIXED_OTP must not be set in production.');
   }
 

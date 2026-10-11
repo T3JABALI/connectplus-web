@@ -1,4 +1,4 @@
-import { processDeliveries, reconcilePayments, recoverStaleDeliveries } from './services/orders.js';
+import { reconcilePayments } from './services/orders.js';
 
 // Runs inside the API process. Safe with one instance. With several, the claim queries use
 // FOR UPDATE SKIP LOCKED so they do not collide.
@@ -9,8 +9,6 @@ export function startWorker() {
     busy = true;
     try {
       await reconcilePayments();
-      await recoverStaleDeliveries();
-      await processDeliveries();
     } catch (e) {
       console.error('Worker error:', e.message);
     } finally {
