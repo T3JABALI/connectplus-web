@@ -6,8 +6,6 @@ import { hmac, randomOtp, randomString, safeEqual } from '../lib/crypto.js';
 import { toLocal } from '../lib/phone.js';
 import { sendSms } from './sms.js';
 
-export async function requestOtp(phone) {
-  console.log('request-otp: received');
 export const shapeUser = (u) => ({
   phone: toLocal(u.phone),
   name: u.name,
@@ -18,6 +16,7 @@ export const shapeUser = (u) => ({
 const codeHash = (phone, code) => hmac(config.jwtSecret, `${phone}:${code}`);
 
 export async function requestOtp(phone) {
+  console.log('request-otp: received');
   const { otp } = config;
   const { rows: [recent] } = await query(
     `SELECT COUNT(*) AS n FROM otp_codes WHERE phone = $1 AND created_at > now() - make_interval(mins => $2::int)`,
@@ -31,8 +30,7 @@ export async function requestOtp(phone) {
     `INSERT INTO otp_codes (phone, code_hash, expires_at) VALUES ($1, $2, now() + make_interval(mins => $3::int))`,
     [phone, codeHash(phone, code), otp.ttlMinutes]
   );
-    console.log('request-otp: code saved, sending SMS via', config.sms.provider);
-  
+  console.log('request-otp: code saved, sending SMS via', config.sms.provider);
   try {
     await sendSms(phone, `Your ConnectPlus code is ${code}. It expires in ${otp.ttlMinutes} minutes. Do not share it.`);
   } catch (e) {
