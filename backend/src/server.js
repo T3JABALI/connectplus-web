@@ -9,7 +9,7 @@ async function main() {
   if (config.autoMigrate) await migrate();
 
   const server = app.listen(config.port, () => {
-    console.log(`ConnectPlus API listening on port ${config.port} (${config.env}, mpesa=${config.mpesa.mode}, delivery=${config.delivery.provider})`);
+        console.log(`ConnectPlus API listening on port ${config.port} (${config.env}, mpesa=${config.mpesa.mode})`);
   });
   const stopWorker = config.runWorker ? startWorker() : () => {};
 
