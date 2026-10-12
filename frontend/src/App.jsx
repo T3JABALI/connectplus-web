@@ -9,6 +9,7 @@ import Help from './pages/Help.jsx';
 import Login from './pages/Login.jsx';
 import RefCapture from './pages/RefCapture.jsx';
 import NotFound from './pages/NotFound.jsx';
+import Admin from './pages/admin/Admin.jsx';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="referral" element={<RequireAuth><Referral /></RequireAuth>} />
         <Route path="help" element={<Help />} />
+        <Route path="admin" element={<Admin />} />
         <Route path="login" element={<Login />} />
         <Route path="ref/:code" element={<RefCapture />} />
         <Route path="*" element={<NotFound />} />
