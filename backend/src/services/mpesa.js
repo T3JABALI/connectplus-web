@@ -42,6 +42,7 @@ export async function stkPush({ phone, amountKes, reference, description }) {
   }
   const m = config.mpesa;
   const ts = timestamp();
+  console.log('STK settings:', JSON.stringify({ mode: m.mode, shortcode: m.shortcode, partyB: m.partyB, type: m.transactionType }));
   const { ok, data } = await post('/mpesa/stkpush/v1/processrequest', {
     BusinessShortCode: m.shortcode,
     Password: password(ts),
