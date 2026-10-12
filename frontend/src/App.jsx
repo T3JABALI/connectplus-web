@@ -9,7 +9,7 @@ import Help from './pages/Help.jsx';
 import Login from './pages/Login.jsx';
 import RefCapture from './pages/RefCapture.jsx';
 import NotFound from './pages/NotFound.jsx';
-import Admin from './pages/admin/Admin.jsx';
+import Admin from './pages/Admin.jsx';
 
 export default function App() {
   return (
