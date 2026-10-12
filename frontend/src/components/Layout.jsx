@@ -9,7 +9,8 @@ const LINKS = [
   ['/buy', 'Buy bundles'],
   ['/dashboard', 'My dashboard'],
   ['/referral', 'Referral program'],
-  ['/help', 'Help']
+  ['/help', 'Help'],
+  ['/admin', 'Admin']
 ];
 
 function Header() {
@@ -66,3 +67,4 @@ export default function Layout() {
     </>
   );
 }
+
