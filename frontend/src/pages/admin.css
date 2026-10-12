@@ -27,7 +27,7 @@ label.f select:focus-visible { outline: 3px solid var(--cyan); outline-offset: 0
 
 .offer-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: middle; }
-
+.btn.danger { background: #c0392b; color: #fff; }
 @media (max-width: 600px) {
   .stat b { font-size: 18px; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }

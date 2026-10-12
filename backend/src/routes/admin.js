@@ -146,7 +146,21 @@ router.patch('/offers/:id', async (req, res) => {
   res.json(after);
 });
 
-/* ---- Activity log ---- */
+router.delete('/offers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { rowCount } = await query('DELETE FROM offers WHERE id = $1', [id]);
+    if (!rowCount) throw new HttpError(404, 'Offer not found.');
+    return res.json({ ok: true, deleted: true });
+  } catch (e) {
+    // 23503 = the offer is referenced by past orders, so it can't be removed.
+    if (e.code === '23503') {
+      await query('UPDATE offers SET active = false WHERE id = $1', [id]);
+      return res.json({ ok: true, deleted: false, archived: true });
+    }
+    throw e;
+  }
+});/* ---- Activity log ---- */
 
 router.get('/audit', async (req, res) => {
   res.json(await svc.listAudit());

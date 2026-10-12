@@ -1,7 +1,6 @@
 // Calls the /admin endpoints. Uses the normal login token; the server checks the account is an admin.
 import { API_URL } from '../config';
 import { getToken } from './token';
-
 const qs = (o) =>
   new URLSearchParams(
     Object.entries(o).filter(([, v]) => v !== '' && v != null).map(([k, v]) => [k, String(v)])
@@ -65,6 +64,7 @@ export const adminApi = {
   offers: () => request('/admin/offers'),
   createOffer: (body) => request('/admin/offers', { method: 'POST', body }),
   updateOffer: (id, body) => request(`/admin/offers/${id}`, { method: 'PATCH', body }),
+  deleteOffer: (id) => request(`/admin/offers/${id}`, { method: 'DELETE' }),
   audit: () => request('/admin/audit'),
   downloadOrdersCsv
 };

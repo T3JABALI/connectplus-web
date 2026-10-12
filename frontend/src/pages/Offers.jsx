@@ -65,7 +65,21 @@ export default function Offers() {
       setErr(ex.message);
     }
   }
+async function remove(offer) {
+  if (!window.confirm(`Delete "${offer.name}"? This cannot be undone.`)) return;
+  try {
+    const r = await adminApi.deleteOffer(offer.id);
+    await load();   // whatever function Offers.jsx already uses to reload the list
+    if (r.archived) {
+      alert('This offer has past orders, so it was hidden instead of deleted.');
+    }
+  } catch (e) {
+    setError(e.message);   // use your existing error state or toast
+  }
+}
 
+// inside each offer's row/card:
+<button type="button" className="btn danger" onClick={() => remove(o)}>Delete</button>
   return (
     <section className="card">
       <div className="head">
