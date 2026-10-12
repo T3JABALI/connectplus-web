@@ -10,7 +10,6 @@ const LINKS = [
   ['/dashboard', 'My dashboard'],
   ['/referral', 'Referral program'],
   ['/help', 'Help'],
-  ['/admin', 'Admin']
 ];
 
 function Header() {
@@ -67,4 +66,5 @@ export default function Layout() {
     </>
   );
 }
+
 
