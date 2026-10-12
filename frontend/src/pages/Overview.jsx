@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { adminApi } from '../../lib/adminApi';
-import { kes } from '../../lib/format';
+import { adminApi } from '../lib/adminApi.js';
+import { kes } from '../lib/format.js';
 import { ErrorBox } from './parts.jsx';
 
 function Stat({ label, value, sub, onClick, warn }) {
@@ -87,3 +87,5 @@ export default function Overview({ go }) {
     </div>
   );
 }
+
+

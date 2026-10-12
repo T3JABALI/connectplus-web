@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { adminApi } from '../../lib/adminApi';
-import { CATS, kesInt } from '../../lib/format';
+import { adminApi } from '../lib/adminApi.js';
+import { CATS, kesInt } from '../lib/format.js';
 import { ErrorBox } from './parts.jsx';
 
 const BLANK = { cat: 'data', size: '', title: '', valid: '', price: '', color: '#1565e8', sort: 0, active: true };
@@ -143,3 +143,5 @@ export default function Offers() {
     </section>
   );
 }
+
+

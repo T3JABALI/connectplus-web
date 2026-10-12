@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { adminApi } from '../../lib/adminApi';
-import { fmtDate, kes, pretty } from '../../lib/format';
+import { adminApi } from '../lib/adminApi.js';
+import { fmtDate, kes, pretty } from '../lib/format.js';
 import { ErrorBox, Pager } from './parts.jsx';
 
 const ORDER_STATUS = {
@@ -195,3 +195,5 @@ export default function Transactions({ preset }) {
     </section>
   );
 }
+
+

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { adminApi } from '../../lib/adminApi';
-import { fmtDate, kes, pretty } from '../../lib/format';
+import { adminApi } from '../lib/adminApi.js';
+import { fmtDate, kes, pretty } from '../lib/format.js';
 import { ErrorBox } from './parts.jsx';
 
 const TABS = [['pending', 'Waiting'], ['approved', 'Paid'], ['rejected', 'Declined']];
@@ -136,3 +136,5 @@ function FragmentRows({ w, status, acting, text, setText, busy, start, cancel, c
     </>
   );
 }
+
+

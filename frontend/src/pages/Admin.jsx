@@ -1,10 +1,10 @@
 import './admin.css';
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { USE_MOCK } from '../../config';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { adminApi } from '../../lib/adminApi';
-import { pretty } from '../../lib/format';
+import { USE_MOCK } from '../config.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { adminApi } from '../lib/adminApi.js';
+import { pretty } from '../lib/format.js';
 import Audit from './Audit.jsx';
 import Offers from './Offers.jsx';
 import Overview from './Overview.jsx';
@@ -89,3 +89,7 @@ export default function Admin() {
     </div>
   );
 }
+
+
+
+

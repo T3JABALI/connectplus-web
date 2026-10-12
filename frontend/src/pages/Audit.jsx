@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { adminApi } from '../../lib/adminApi';
-import { fmtDate, pretty } from '../../lib/format';
+import { adminApi } from '../lib/adminApi.js';
+import { fmtDate, pretty } from '../lib/format.js';
 import { ErrorBox } from './parts.jsx';
 
 const ACTIONS = {
@@ -62,3 +62,5 @@ export default function Audit() {
     </section>
   );
 }
+
+
