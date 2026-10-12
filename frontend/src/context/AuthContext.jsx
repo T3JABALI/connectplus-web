@@ -24,8 +24,14 @@ export function AuthProvider({ children }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const login = useCallback(async (phone, code) => {
-    const res = await api.verifyOtp(phone, code, getRef());
+  const login = useCallback(async (phone, password) => {
+    const res = await api.login(phone, password);
+    setToken(res.token);
+    await refresh();
+  }, [refresh]);
+
+  const register = useCallback(async (phone, password) => {
+    const res = await api.register(phone, password, getRef());
     setToken(res.token);
     clearRef();
     await refresh();
@@ -33,6 +39,9 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => { setToken(null); setAccount(null); }, []);
 
-  const value = useMemo(() => ({ account, loading, refresh, login, logout }), [account, loading, refresh, login, logout]);
+  const value = useMemo(
+    () => ({ account, loading, refresh, login, register, logout }),
+    [account, loading, refresh, login, register, logout]
+  );
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

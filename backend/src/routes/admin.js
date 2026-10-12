@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { query } from '../db.js';
 import { approveReviewedOrder } from '../services/orders.js';
 import { toLocal } from '../lib/phone.js';
-import { parse, z } from '../lib/validate.js';
+import { passwordSchema } from '../lib/password.js';
+import { parse, phoneSchema, z } from '../lib/validate.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { approveWithdrawal, rejectWithdrawal } from '../services/ledger.js';
-
+import { adminSetPassword } from '../services/accounts.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -39,7 +40,11 @@ router.post('/withdrawals/:id/reject', async (req, res) => {
   await rejectWithdrawal(idParam(req), note);
   res.json({ ok: true });
 });
-
+router.post('/users/reset-password', async (req, res) => {
+  const { phone, newPassword } = parse(z.object({ phone: phoneSchema, newPassword: passwordSchema }), req.body);
+  await adminSetPassword(phone, newPassword);
+  res.json({ ok: true });
+});
 /* ---- orders that need a human: payments held because something looked wrong ---- */
 
 router.get('/orders/attention', async (req, res) => {

@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { api } from '../lib';
-import { USE_MOCK } from '../config';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getRef } from '../lib/referral';
 import { getSavedPhone, normPhone, pretty, savePhone } from '../lib/format';
@@ -9,67 +7,96 @@ import { getSavedPhone, normPhone, pretty, savePhone } from '../lib/format';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { account, login } = useAuth();
-  const [step, setStep] = useState('phone'); // phone | code
+  const { account, login, register } = useAuth();
+  const [mode, setMode] = useState(location.state?.mode || (getRef() ? 'register' : 'login'));
   const [phone, setPhone] = useState(pretty(location.state?.phone || getSavedPhone()));
-  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [show, setShow] = useState(false);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const dest = location.state?.from || '/dashboard';
   const invited = !!getRef();
+  const isRegister = mode === 'register';
 
   useEffect(() => { if (account) navigate(dest, { replace: true }); }, [account, dest, navigate]);
 
-  async function sendCode(e) {
-    e?.preventDefault();
-    const p = normPhone(phone);
-    if (!p) return setErr('Enter a valid Kenyan number, like 0712 345 678.');
-    setErr(''); setBusy(true);
-    try {
-      await api.requestOtp(p);
-      savePhone(p);
-      setStep('code');
-    } catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+  function switchMode(next) {
+    setMode(next);
+    setErr('');
+    setPassword('');
+    setConfirm('');
   }
 
-  async function verify(e) {
+  async function submit(e) {
     e.preventDefault();
-    if (!/^\d{6}$/.test(code)) return setErr('Enter the 6-digit code we sent you.');
-    setErr(''); setBusy(true);
+    const p = normPhone(phone);
+    if (!p) return setErr('Enter a valid Kenyan number, like 0712 345 678.');
+    if (!password) return setErr(isRegister ? 'Create a password.' : 'Enter your password.');
+    if (isRegister) {
+      if (password.length < 8) return setErr('Use at least 8 characters for your password.');
+      if (password !== confirm) return setErr('The two passwords do not match.');
+    }
+    setErr('');
+    setBusy(true);
     try {
-      await login(normPhone(phone), code);
-    } catch (ex) { setErr(ex.message); setBusy(false); }
+      savePhone(p);
+      if (isRegister) await register(p, password);
+      else await login(p, password);
+    } catch (ex) {
+      setErr(ex.message);
+      setBusy(false);
+    }
   }
+
+  const pwType = show ? 'text' : 'password';
 
   return (
     <div className="wrap">
       <div className="card authcard">
-        {step === 'phone' ? (
-          <form onSubmit={sendCode} noValidate style={{ display: 'grid', gap: 14 }}>
-            <h1>Log in or sign up</h1>
-            <p className="muted">{invited ? 'A friend invited you. ' : ''}Enter your phone number and we will text you a code. No password needed.</p>
-            <label className="f">Phone number
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="07XX XXX XXX" autoFocus />
+        <div className="tabs" role="group" aria-label="Log in or create an account" style={{ marginBottom: 16 }}>
+          <button type="button" aria-pressed={!isRegister} onClick={() => switchMode('login')}>Log in</button>
+          <button type="button" aria-pressed={isRegister} onClick={() => switchMode('register')}>Create account</button>
+        </div>
+
+        <form onSubmit={submit} noValidate style={{ display: 'grid', gap: 14 }}>
+          <h1>{isRegister ? 'Create your account' : 'Welcome back'}</h1>
+          <p className="muted">
+            {isRegister
+              ? `${invited ? 'A friend invited you. ' : ''}Use your phone number and choose a password.`
+              : 'Log in with your phone number and password.'}
+          </p>
+
+          <label className="f">Phone number
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="username" placeholder="07XX XXX XXX" autoFocus />
+          </label>
+
+          <label className="f">{isRegister ? 'Create password' : 'Password'}
+            <input type={pwType} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isRegister ? 'new-password' : 'current-password'} />
+            {isRegister && <small>At least 8 characters.</small>}
+          </label>
+
+          {isRegister && (
+            <label className="f">Confirm password
+              <input type={pwType} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
             </label>
-            <p className="fe" role="alert">{err}</p>
-            <button type="submit" className="btn primary block" disabled={busy}>{busy ? 'Sending code…' : 'Send code'}</button>
-          </form>
-        ) : (
-          <form onSubmit={verify} noValidate style={{ display: 'grid', gap: 14 }}>
-            <h1>Enter your code</h1>
-            <p className="muted">We sent a 6-digit code to {pretty(normPhone(phone))}.</p>
-            <label className="f">Code
-              <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" autoFocus />
-            </label>
-            {USE_MOCK && <p className="proto" style={{ textAlign: 'left' }}>Prototype mode: use code 123456.</p>}
-            <p className="fe" role="alert">{err}</p>
-            <button type="submit" className="btn primary block" disabled={busy}>{busy ? 'Checking…' : 'Log in'}</button>
-            <div className="btnrow">
-              <button type="button" className="linkbtn" onClick={() => { setStep('phone'); setCode(''); setErr(''); }}>Change number</button>
-              <button type="button" className="linkbtn" onClick={sendCode}>Send a new code</button>
-            </div>
-          </form>
-        )}
+          )}
+
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
+            <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} /> Show password
+          </label>
+
+          <p className="fe" role="alert">{err}</p>
+          <button type="submit" className="btn primary block" disabled={busy}>
+            {busy ? 'Please wait…' : isRegister ? 'Create account' : 'Log in'}
+          </button>
+
+          {!isRegister && (
+            <p className="muted" style={{ fontSize: 13 }}>
+              Forgot your password? <Link to="/help">Contact support</Link> and we will reset it for you.
+            </p>
+          )}
+        </form>
       </div>
     </div>
   );
