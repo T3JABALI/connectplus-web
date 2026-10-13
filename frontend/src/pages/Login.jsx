@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getRef } from '../lib/referral';
+import { getSavedPhone, normPhone, pretty, savePhone } from '../lib/format';
 
 export default function Login() {
   const navigate = useNavigate();
