@@ -37,7 +37,12 @@ export function AuthProvider({ children }) {
     await refresh();
   }, [refresh]);
 
-  const logout = useCallback(() => { setToken(null); setAccount(null); }, []);
+    // Asks first, so a stray tap does not log anyone out.
+  const logout = useCallback(() => {
+    if (!window.confirm('Log out of ConnectPlus?')) return;
+    setToken(null);
+    setAccount(null);
+  }, []);
 
   const value = useMemo(
     () => ({ account, loading, refresh, login, register, logout }),

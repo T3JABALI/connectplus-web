@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { Cart, User, WifiLogo } from './icons.jsx';
 import { pretty } from '../lib/format';
 
+
 const LINKS = [
   ['/', 'Home', true],
   ['/buy', 'Buy bundles'],
@@ -14,6 +15,8 @@ const LINKS = [
 
 function Header() {
   const { account, logout } = useAuth();
+  const isAdmin = !!account?.user.isAdmin;
+  const dashboardPath = isAdmin ? '/admin' : '/dashboard';
   return (
     <header className="top">
       <div className="wrap">
@@ -23,14 +26,14 @@ function Header() {
         </Link>
         <nav aria-label="Main">
           {LINKS.map(([to, label, end]) => (
-            <NavLink key={to} to={to} end={end}>{label}</NavLink>
+           <NavLink key={to} to={to === '/dashboard' ? dashboardPath : to} end={end}>{label}</NavLink>
           ))}
         </nav>
         {account ? (
           <>
-            <Link to="/dashboard" className="me" aria-label="Open my dashboard">
+            <Link to={dashboardPath} className="me" aria-label="Open my dashboard">
               <span className="avatar"><User /></span>
-              <div><b>{account.user.name || pretty(account.user.phone)}</b><small>Member</small></div>
+              <div><b>{account.user.name || pretty(account.user.phone)}</b><small>{isAdmin ? 'Admin' : 'Member'}</small></div>
             </Link>
             <button type="button" className="btn ghost hide-sm" onClick={logout}>Log out</button>
           </>
@@ -40,6 +43,7 @@ function Header() {
       </div>
     </header>
   );
+  
 }
 
 function Footer() {

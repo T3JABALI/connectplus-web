@@ -20,7 +20,7 @@ const TABS = [
 ];
 
 export default function Admin() {
-  const { account, loading } = useAuth();
+  const { account, loading, logout } = useAuth();
   const [access, setAccess] = useState('checking'); // checking | ok | denied | error
   const [who, setWho] = useState(null);
   const [tab, setTab] = useState('overview');
@@ -68,9 +68,12 @@ export default function Admin() {
 
   return (
     <div className="wrap admin">
-      <div className="pageh">
-        <h1>Admin</h1>
-        <p>{who.phone ? `Signed in as ${pretty(who.phone)}` : 'Signed in with the admin key'}</p>
+      <div className="pageh head" style={{ alignItems: 'flex-end' }}>
+        <div>
+          <h1>Admin</h1>
+          <p>{who.phone ? `Signed in as ${pretty(who.phone)}` : 'Signed in with the admin key'}</p>
+        </div>
+        <button type="button" className="btn ghost" onClick={logout}>Log out</button>
       </div>
 
       <div className="tabs admin-tabs" role="group" aria-label="Admin sections">
