@@ -11,7 +11,6 @@ export default function PurchaseModal({ offer, onClose }) {
   const { account, refresh } = useAuth();
   const initial = pretty(account?.user.phone || getSavedPhone());
   const [step, setStep] = useState('form'); // form | waiting | done | failed | timeout
-  const [to, setTo] = useState(initial);
   const [pay, setPay] = useState(initial);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -40,14 +39,12 @@ export default function PurchaseModal({ offer, onClose }) {
 
   async function submit(e) {
     e.preventDefault();
-    const recipientPhone = normPhone(to);
     const payerPhone = normPhone(pay);
-    if (!recipientPhone) return setErr('Enter a valid number to receive the bundle, like 0712 345 678.');
     if (!payerPhone) return setErr('Enter a valid M-Pesa number, like 0712 345 678.');
     setErr(''); setBusy(true);
     try {
-      const created = await api.createOrder({ offerId: offer.id, recipientPhone, payerPhone });
-      savePhone(recipientPhone);
+      const created = await api.createOrder({ offerId: offer.id, payerPhone });
+      savePhone(payerPhone);
       setPayer(payerPhone);
       setOrder(created);
       setStep('waiting');
@@ -58,7 +55,6 @@ export default function PurchaseModal({ offer, onClose }) {
       setBusy(false);
     }
   }
-
   if (step === 'waiting') {
     return (
       <>
@@ -118,13 +114,9 @@ export default function PurchaseModal({ offer, onClose }) {
         <div><b>{offer.title}</b><div className="muted" style={{ fontSize: 13 }}>{NETS[offer.net]} · Valid {offer.valid}</div></div>
         <b>{kesInt(offer.price)}</b>
       </div>
-      <label className="f">Send bundle to
-        <input value={to} onChange={(e) => setTo(e.target.value)} inputMode="tel" placeholder="07XX XXX XXX" />
-        <small>The {NETS[offer.net]} number that receives the bundle.</small>
-      </label>
-      <label className="f">Pay with M-Pesa number
+      <label className="f">M-Pesa number
         <input value={pay} onChange={(e) => setPay(e.target.value)} inputMode="tel" placeholder="07XX XXX XXX" />
-        <small>You will get a prompt on this number.</small>
+        <small>You will get a prompt on this number, and your bundle is sent to it.</small>
       </label>
       <p className="fe" role="alert">{err}</p>
       <div className="btnrow">

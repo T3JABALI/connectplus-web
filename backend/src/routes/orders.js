@@ -17,15 +17,16 @@ const orderLimiter = rateLimit({
 });
 
 router.post('/', orderLimiter, optionalAuth, async (req, res) => {
-  const { offerId, recipientPhone, payerPhone } = parse(
+  const { offerId, payerPhone } = parse(
     z.object({
       offerId: z.string({ required_error: 'Choose a bundle.' }).min(1).max(40),
-      recipientPhone: phoneSchema,
       payerPhone: phoneSchema
     }),
     req.body
   );
-  const result = await createOrder({ offerId, recipientPhone, payerPhone, userId: req.userId });
+  // Bundles always go to the number that pays. Zod drops unknown fields, so a
+  // recipientPhone sent by a client is ignored.
+  const result = await createOrder({ offerId, recipientPhone: payerPhone, payerPhone, userId: req.userId });
   res.status(201).json(result);
 });
 

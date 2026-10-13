@@ -91,7 +91,7 @@ export const mockApi = {
     return { user: d.user, stats: { ...d.account, referralCount: d.referrals.length } };
   },
 
-  async createOrder({ offerId, recipientPhone, payerPhone }) {
+  async createOrder({ offerId, payerPhone }) {
     await delay(400);
     const offer = OFFERS.find((o) => o.id === offerId);
     if (!offer) throw fail('That offer is no longer available.');
@@ -99,7 +99,7 @@ export const mockApi = {
     const order = {
       id: 'ord_' + Math.random().toString(36).slice(2, 10),
       ref: 'CP-' + Math.random().toString(36).slice(2, 8).toUpperCase(),
-      offerId, title: offer.title, net: offer.net, recipientPhone, payerPhone, price: offer.price,
+      offerId, title: offer.title, net: offer.net, recipientPhone: payerPhone, price: offer.price,
       status: 'pending', createdAt: new Date().toISOString(),
       owner: getToken() && d.user ? d.user.phone : null
     };
