@@ -1,53 +1,114 @@
-import { useEffect, useState } from 'react';
-import { api } from '../lib';
+import { useEffect, useRef, useState } from "react";
 
-const REFRESH_MS = 60000;
-const n = (v) => Number(v || 0).toLocaleString('en-KE');
+// Edit these numbers/labels to update the section
+const STATS = [
+  {
+    target: 5000,
+    suffix: "+",
+    label: "Happy users",
+    color: "#1456d9",
+    icon: (
+      <svg viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="10" cy="7" r="4" />
+        <path d="M21 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    target: 4000,
+    suffix: "+",
+    label: "Offers delivered",
+    color: "#16a34a",
+    icon: (
+      <svg viewBox="0 0 24 24">
+        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+      </svg>
+    ),
+  },
+];
 
-// A stat is shown only once its real number is worth showing. Change these whenever you like.
-const MIN_DELIVERED = 50;
-const MIN_TODAY = 5;
-const MIN_MEMBERS = 100;
-
-// Real usage numbers from the server, refreshed every minute while the page is open.
-export default function LiveStats() {
-  const [s, setS] = useState(null);
+function Counter({ target, suffix }) {
+  const ref = useRef(null);
+  const [text, setText] = useState("0");
 
   useEffect(() => {
-    if (!api.publicStats) return undefined; // the built-in test mode has no live data
-    let on = true;
-    const load = () => api.publicStats().then((r) => on && setS(r)).catch(() => {});
-    load();
-    const timer = setInterval(() => { if (document.visibilityState === 'visible') load(); }, REFRESH_MS);
-    return () => { on = false; clearInterval(timer); };
-  }, []);
-
-  if (!s) return null; // nothing to show yet, or the server is unreachable
-
-  const stats = [];
-  if (Number(s.bundlesDelivered) >= MIN_DELIVERED) stats.push({ label: 'Bundles delivered', value: n(s.bundlesDelivered) });
-  if (Number(s.deliveredToday) >= MIN_TODAY) stats.push({ label: 'Delivered today', value: n(s.deliveredToday) });
-  if (Number(s.members) >= MIN_MEMBERS) stats.push({ label: 'Members', value: n(s.members) });
-  // "Most popular" means little until there is real volume behind it.
-  if (s.popular && Number(s.bundlesDelivered) >= MIN_DELIVERED) {
-    stats.push({ label: 'Most popular this month', value: s.popular, small: true });
-  }
-
-  if (!stats.length) return null; // too early to show numbers: hide the band
+    const el = ref.current;
+    if (!el) return;
+    let raf;
+    const run = () => {
+      const start = performance.now();
+      const dur = 1800;
+      const tick = (now) => {
+        const p = Math.min((now - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.floor(target * eased).toLocaleString();
+        setText(p === 1 ? val + suffix : val);
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          run();
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [target, suffix]);
 
   return (
-    <section className="live" aria-label="Live usage">
-      <div className="wrap">
-        <h2><span className="live-dot" aria-hidden="true" />Live on ConnectPlus</h2>
-        <div className="live-grid">
-          {stats.map((x) => (
-            <div className="live-stat" key={x.label}>
-              <b className={x.small ? 'small' : undefined}>{x.value}</b>
-              <span>{x.label}</span>
+    <div className="cp-stat-num" ref={ref}>
+      {text}
+    </div>
+  );
+}
+
+export default function LiveStats() {
+  return (
+    <section className="cp-stats">
+      <style>{`
+        .cp-stats {
+          background: #fff;
+          border-radius: 24px;
+          padding: 32px 33px;
+          box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+          margin: 35px auto;
+          max-width: 1165px;
+        }
+        .cp-stats h2 { font-size: 1.9rem; font-weight: 700; color: #0b1530; margin: 0 0 4px; }
+        .cp-stats-sub { color: #5b6478; font-size: 1.1rem; margin: 0 0 28px; }
+        .cp-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+        .cp-stat { display: flex; align-items: center; gap: 16px; }
+        .cp-stat-icon { width: 78px; height: 78px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cp-stat-icon svg { width: 36px; height: 36px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .cp-stat-num { font-size: 2.4rem; font-weight: 800; color: #0b1530; line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .cp-stat-label { color: #5b6478; font-size: 1.05rem; margin-top: 2px; }
+      `}</style>
+
+      <h2>Trusted by Kenyans every day</h2>
+      <p className="cp-stats-sub">Our growing community in numbers.</p>
+
+      <div className="cp-stats-grid">
+        {STATS.map((s) => (
+          <div className="cp-stat" key={s.label}>
+            <div className="cp-stat-icon" style={{ background: s.color }}>
+              {s.icon}
             </div>
-          ))}
-        </div>
-        <p className="live-note">Real numbers from our system, refreshed every minute. Every bundle is delivered on Safaricom.</p>
+            <div>
+              <Counter target={s.target} suffix={s.suffix} />
+              <div className="cp-stat-label">{s.label}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
