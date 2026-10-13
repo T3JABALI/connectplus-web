@@ -263,3 +263,34 @@ a.btn.primary,a.btn.green{color:#fff}
 .net-logo-box img { display: block; height: 26px; width: auto; }
 .net-name { color: #5ccf3c; font-weight: 800; }
 .net-motto { color: #fff; font-style: italic; font-weight: 600; }
+/* ============ Mobile fit fixes (keep at the very end of the file) ============ */
+
+/* 1. Root cause: let grid columns shrink below their content's width */
+.layout { grid-template-columns: minmax(0, 1fr) 360px; }
+@media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.layout > *, .stack, .stack > *, .card, .two > * { min-width: 0; }
+
+/* 2. Safety net: never allow sideways page scrolling */
+html, body { max-width: 100%; }
+body { overflow-x: hidden; overflow-x: clip; }
+img { max-width: 100%; height: auto; }
+
+/* 3. Grids whose minimum column width is wider than a small phone */
+.two   { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.steps { grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+.live-grid { grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); }
+.mini  { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bal .row { flex-wrap: wrap; }
+
+/* 4. Header nav: its negative margin must match the 14px padding used on phones */
+@media (max-width: 600px) {
+  nav { margin: 0 -14px; padding: 0 10px; }
+}
+
+/* 5. Tables fit the screen on phones instead of forcing a sideways scroll */
+@media (max-width: 600px) {
+  table { min-width: 0; font-size: 13px; }
+  th, td { padding: 10px 6px; }
+  .admin table { min-width: 560px; }   /* admin tables have many columns: they scroll inside their card */
+  .hide-col-sm { display: none; }      /* optional: add class="hide-col-sm" to a less important column */
+}
