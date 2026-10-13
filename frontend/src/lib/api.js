@@ -24,6 +24,7 @@ async function request(path, { method = 'GET', body } = {}) {
 export const realApi = {
   config: () => request('/config'),
   offers: () => request('/offers'),
+  publicStats: () => request('/stats/public'),
   requestOtp: (phone) => request('/auth/request-otp', { method: 'POST', body: { phone } }),
   verifyOtp: (phone, code, ref) => request('/auth/verify-otp', { method: 'POST', body: { phone, code, ref } }),
   register: (phone, password, ref) => request('/auth/register', { method: 'POST', body: { phone, password, ref } }),
