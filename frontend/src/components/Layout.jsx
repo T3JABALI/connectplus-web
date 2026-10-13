@@ -66,12 +66,10 @@ export default function Layout() {
   return (
     <>
       <Header />
-        <main><Outlet /></main>
-        <LiveStats />
-        <Footer />
+      <main><Outlet /></main>
+      <LiveStats />
       <Footer />
     </>
   );
 }
-
 
