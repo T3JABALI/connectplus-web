@@ -17,7 +17,7 @@ const STATS = [
     ),
   },
   {
-    target: 4000,
+    target: 5000,
     suffix: "+",
     label: "Offers delivered",
     color: "#16a34a",
