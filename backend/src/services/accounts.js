@@ -15,7 +15,8 @@ export const shapeUser = (u) => ({
   phone: toLocal(u.phone),
   name: u.name,
   since: u.created_at.toISOString(),
-  refCode: u.ref_code
+  refCode: u.ref_code,
+  isAdmin: !!u.is_admin
 });
 
 export const issueToken = (user) => jwt.sign({}, config.jwtSecret, { subject: user.id, expiresIn: '30d' });

@@ -29,9 +29,9 @@ export const config = {
   corsOrigins: origins.length || isProd ? origins : ['http://localhost:5173'],
   publicUrl: (env.PUBLIC_URL || '').replace(/\/$/, ''),
 
-  selfRate: num(env.SELF_COMMISSION_RATE, 0.02),
-  refRate: num(env.REF_COMMISSION_RATE, 0.05),
-  minWithdrawKes: num(env.MIN_WITHDRAWAL_KES, 100),
+  selfRate: num(env.SELF_COMMISSION_RATE, 0.025),
+  refRate: num(env.REF_COMMISSION_RATE, 0.02),
+  minWithdrawKes: num(env.MIN_WITHDRAWAL_KES, 10),
   commissionHoldHours: Math.round(num(env.COMMISSION_HOLD_HOURS, 24)),
 
   otp: {

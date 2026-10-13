@@ -14,11 +14,14 @@ export default function Login() {
   const [show, setShow] = useState(false);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const dest = location.state?.from || '/dashboard';
   const invited = !!getRef();
   const isRegister = mode === 'register';
 
-  useEffect(() => { if (account) navigate(dest, { replace: true }); }, [account, dest, navigate]);
+  useEffect(() => {
+    if (!account) return;
+    const fallback = account.user.isAdmin ? '/admin' : '/dashboard';
+    navigate(location.state?.from || fallback, { replace: true });
+  }, [account, location.state, navigate]);
 
   function switchMode(next) {
     setMode(next);

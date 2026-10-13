@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { useConfig } from '../lib/hooks';
 import { Cart, Gift, Phone, Users, User, Whatsapp, Wifi } from './icons.jsx';
-import { NETS, fmtDate, fmtYear, kes, kesInt, pretty } from '../lib/format';
+  import { NETS, fmtDate, fmtYear, kes, kesInt, pct, pretty } from '../lib/format';
 
 export function AccountCard() {
   const { account } = useAuth();
@@ -104,7 +104,7 @@ export function GuestCard() {
     <section className="card">
       <h3 className="t">Earn while you connect</h3>
       <p className="muted" style={{ margin: '6px 0 14px', fontSize: 14 }}>
-        Log in with your phone number to earn {Math.round(cfg.selfRate * 100)}% on your own purchases and {Math.round(cfg.refRate * 100)}% on your friends'.
+        Log in with your phone number to earn {pct(cfg.selfRate)} on your own purchases and {pct(cfg.refRate)} on your friends'.
       </p>
       <Link to="/login" className="btn primary block">Log in or sign up</Link>
     </section>

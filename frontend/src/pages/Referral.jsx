@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib';
 import { ReferralCard } from '../components/Cards.jsx';
 import { useConfig } from '../lib/hooks';
-import { fmtMonth, kes, kesInt } from '../lib/format';
+import { fmtMonth, kes, kesInt, pct } from '../lib/format';
 
 export default function Referral() {
   const cfg = useConfig();
@@ -23,8 +23,8 @@ export default function Referral() {
         <section className="card">
           <h3 className="t">How you earn</h3>
           <div className="rules">
-            <div className="rule"><span className="big">{Math.round(cfg.refRate * 100)}%</span><p><b>On your friends' purchases</b>Earned every time someone who joined with your link buys a bundle.</p></div>
-            <div className="rule"><span className="big">{Math.round(cfg.selfRate * 100)}%</span><p><b>On your own purchases</b>Earned each time you buy from your account.</p></div>
+            <div className="rule"><span className="big">{pct(cfg.refRate)}%</span><p><b>On your friends' purchases</b>Earned every time someone who joined with your link buys a bundle.</p></div>
+            <div className="rule"><span className="big">{pct(cfg.selfRate)}%</span><p><b>On your own purchases</b>Earned each time you buy from your account.</p></div>
             <div className="rule"><span className="big">{kesInt(cfg.minWithdraw)}</span><p><b>Minimum withdrawal</b>Paid out to your M-Pesa number once approved.</p></div>
           </div>
         </section>

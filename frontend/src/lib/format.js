@@ -4,6 +4,8 @@ export const CATS = { data: 'Data bundles', sms: 'SMS', min: 'Minutes', special:
 export const kes = (n) =>
   'KSh ' + Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const kesInt = (n) => 'KSh ' + Number(n).toLocaleString('en-KE');
+  // 0.025 -> "2.5%", 0.02 -> "2%"
+  export const pct = (rate) => `${Number((rate * 100).toFixed(2))}%`;
 
 // Accepts 07XX, 01XX, 2547XX and +2547XX. Returns 07XXXXXXXX or null.
 export function normPhone(v) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from './index';
 
-const DEFAULT_CFG = { selfRate: 0.02, refRate: 0.05, minWithdraw: 100 };
+const DEFAULT_CFG = { selfRate: 0.025, refRate: 0.02, minWithdraw: 10 };
 
 export function useConfig() {
   const [cfg, setCfg] = useState(DEFAULT_CFG);
